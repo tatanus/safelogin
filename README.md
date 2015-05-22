@@ -1,4 +1,4 @@
-# safelogin
+# "Ssafelogin.co" Phishing App
 Simple application/website designed to illustrate how simple it is to set up phishing websites.
 Based on the website I created a few years ago: http://safelogin.co
 
@@ -10,8 +10,13 @@ Running the actual tool is simple enough.
 # python phish.py <registered DNS domain> <passphrase used to protect credentials>
 ```
 
-Requirements:
+# Requirements:
  * DNS domain
  * phantomjs
  * twisted python module
  * sqlite3 python module
+
+# Misc
+Video of sample usage
+
+[![Video of simple usage](http://img.youtube.com/vi/38vsWI9YSts/0.jpg)](http://www.youtube.com/watch?v=38vsWI9YSts)
