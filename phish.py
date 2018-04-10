@@ -16,25 +16,6 @@ import os
 import time
 import sys
 
-class MyPP(protocol.ProcessProtocol):
-    def __init__(self, connection, sitename, outfile):
-        self.conn = connection
-        self.sitename = sitename
-        self.outfile = outfile
-
-    def connectionMade(self):
-        self.pid = self.transport.pid
-
-    def processEnded(self, reason):
-        fin = open(self.outfile, "rb")
-        data = fin.read()
-        fin.close()
-        os.remove(self.outfile)
-        cursor = self.conn.cursor()
-        cursor.execute('INSERT INTO images VALUES(CURRENT_TIMESTAMP,?,?)', (self.sitename,sqlite3.Binary(data),))
-        self.conn.commit()
-        return
-
 class PhishDB():
     def __init__(self, sqlite_file="phishing.sqlite"):
         self.sqlite_file = sqlite_file
@@ -109,10 +90,37 @@ class PhishDB():
         self.conn.commit()
         return
 
+    def execWait(self, cmd, outfile=None, timeout=0):
+        result = ""
+        env = os.environ
+        proc = subprocess.Popen(cmd, executable='/bin/bash', env=env, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+
+        if timeout:
+            timer = threading.Timer(timeout, proc.kill)
+            timer.start()
+        result = proc.communicate()[0]
+        if timeout:
+            if timer.is_alive():
+                timer.cancel()
+        if outfile:
+            if Utils.fileExists(outfile):
+                print "FILE ALREADY EXISTS!!!!"
+            else:
+                tmp_result = "\033[0;33m(" + time.strftime(
+                    "%Y.%m.%d-%H.%M.%S") + ") <pentest> #\033[0m " + cmd + Utils.newLine() + Utils.newLine() + result
+                Utils.writeFile(tmp_result, outfile)
+        return result
+
     def screenCaptureWebSite(self, url, sitename, outfile):
-        pp = MyPP(self.conn, sitename, outfile)
-        command = ['/usr/bin/phantomjs', '--ssl-protocol=any', '--ignore-ssl-errors=yes', os.getcwd() + '/libs/screencap.js', url,  outfile]
-        reactor.spawnProcess(pp, command[0], command, {})
+        self.execWait("/usr/bin/cutycapt --min-width=1920 --min-height=1080 --insecure --url="+url+" --out="+outfile)
+
+        fin = open(outfile, "rb")
+        data = fin.read()
+        fin.close()
+        os.remove(outfile)
+        cursor = self.conn.cursor()
+        cursor.execute('INSERT INTO images VALUES(CURRENT_TIMESTAMP,?,?)', (sitename,sqlite3.Binary(data),))
+        self.conn.commit()
         return
         
     def addImage(self, sitename, image):
